@@ -10,82 +10,86 @@ import GameplayKit
 
 class GameScene: SKScene {
     
-    private var label : SKLabelNode?
-    private var spinnyNode : SKShapeNode?
     
+    //square shapeNode and the initial movement for it
+    let square = SKShapeNode(rectOf: CGSize(width: 50, height: 50))
+    var moveX = 1
+    
+    //car spriteNode and the initial movement variable for it
+    let car = SKSpriteNode(imageNamed: "yellowCar")
+    var carX: Float = 0
+    
+    
+    //didMove fucntion to run once; initial setup for notes
     override func didMove(to view: SKView) {
         
-        // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-        if let label = self.label {
-            label.alpha = 0.0
-            label.run(SKAction.fadeIn(withDuration: 2.0))
-        }
+        //add square and make it yellow
+        square.fillColor = SKColor.yellow
+        addChild(square)
         
-        // Create shape node to use during mouse interaction
-        let w = (self.size.width + self.size.height) * 0.05
-        self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
+        //add car object
+        addChild(car)
         
-        if let spinnyNode = self.spinnyNode {
-            spinnyNode.lineWidth = 2.5
-            
-            spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(Double.pi), duration: 1)))
-            spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-                                              SKAction.fadeOut(withDuration: 0.5),
-                                              SKAction.removeFromParent()]))
-        }
     }
-    
-    
-    func touchDown(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.green
-            self.addChild(n)
-        }
-    }
-    
-    func touchMoved(toPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.blue
-            self.addChild(n)
-        }
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.red
-            self.addChild(n)
-        }
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-        self.touchDown(atPoint: event.location(in: self))
-    }
-    
-    override func mouseDragged(with event: NSEvent) {
-        self.touchMoved(toPoint: event.location(in: self))
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        self.touchUp(atPoint: event.location(in: self))
-    }
-    
+
+    //keyDown function to check what button is pressed and accellerates the car in that direction
     override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
-        case 0x31:
-            if let label = self.label {
-                label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-            }
-        default:
-            print("keyDown: \(event.characters!) keyCode: \(event.keyCode)")
+        
+        //The acceleration increase to the right
+        if event.keyCode == 124 {
+            carX += 1
         }
+        
+        //The acceleration increase to the left
+        if event.keyCode == 123 {
+            carX -= 1
+        }
+        
     }
     
+    //Slows the car if the button is not pressed
+    override func keyUp(with event: NSEvent) {
+        
+        //car is supposed to decellerate if the key is not pressed
+        if event.keyCode == 123 {
+            carX += 0.5
+        }
+        if event.keyCode == 124 {
+            carX -= 0.5
+        }
+        
+    }
     
+    /*
+     Update function: This function runs approximately 60 times per second, corrosponding with the framerate given.
+     Movement is given here to change the acceleration of the objects given
+    */
     override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+        
+        //Moves the square to the left based on the moveX variable
+        square.position.x = square.position.x + CGFloat(moveX)
+        
+        //If the square collides with the wall; change the direction of the movement
+        if square.position.x > 512 - 25 {
+            moveX = -moveX
+        }
+        if square.position.x < 512 + 25 {
+            moveX = +moveX
+        }
+        
+        //If within the boundaries, move the cars position based on the carX variable.
+        if carX > 0 && car.position.x < 512 - 61{
+            car.position.x = car.position.x + CGFloat(carX)
+            
+        }
+        else if carX < 0 && car.position.x > -512 + 61 {
+            car.position.x = car.position.x + CGFloat(carX)
+        }
+        
+        //if the car falls outside those boundaries, reduce the speed to 0
+        else {
+            carX = 0
+        }
+        
     }
 }
